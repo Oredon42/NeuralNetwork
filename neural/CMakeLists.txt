@@ -1,18 +1,29 @@
-set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+set(SOURCE_FILES
+    src/dataset.cpp
+    src/layer.cpp
+    src/multilayer_perceptron.cpp
+    src/perceptron.cpp
+    src/trainer.cpp
+)
 
-project(Neural)
+set(PUBLIC_HEADER_FILES
+    include/neural/activation_functions.h
+    include/neural/assert.h
+    include/neural/dataset.h
+    include/neural/defines.h
+    include/neural/layer.h
+    include/neural/multilayer_perceptron.h
+    include/neural/perceptron.h
+    include/neural/trainer.h
+)
 
-cmake_minimum_required(VERSION 2.8)
+add_library(NeuralLib STATIC
+    ${SOURCE_FILES}
+    ${PRIVATE_HEADER_FILES}
+    ${PUBLIC_HEADER_FILES}
+)
 
-# Get sources and headers
-set(SOURCE_DIR src)
-
-file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
-file(GLOB_RECURSE HEADERS ${SOURCE_DIR}/*.h)
-
-set(CMAKE_CXX_FLAGS "-std=c++11 -g -ggdb -O0 -Wall")
-
-add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
-target_include_directories(Neural PRIVATE SOURCE_DIR)
+target_include_directories(NeuralLib
+    PUBLIC
+        include
+)

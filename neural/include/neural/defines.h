@@ -3,20 +3,20 @@
 
 #include <vector>
 
-using real = double;
+#ifdef _SIMPLE_PRECISION
+	using real = float;
+#else
+	using real = double;
+#endif
 
 using Input = real;
 using Output = real;
 using Weight = real;
+using Error = real;
 
 using Inputs = std::vector<Input>;
 using Outputs = std::vector<Output>;
 using Weights = std::vector<Weight>;
-
-struct Dataset
-{
-    std::vector<Inputs> aInputs;
-    std::vector<Outputs> aOutputs;
-};
+using Errors = std::vector<Error>;
 
 #endif // DEFINES_H

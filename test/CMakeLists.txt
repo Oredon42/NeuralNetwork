@@ -1,22 +1,35 @@
-set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+cmake_minimum_required(VERSION 3.0)
 
 project(Test)
 
-cmake_minimum_required(VERSION 2.8)
+set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
-# Get sources and headers
-set(SOURCE_DIR src)
+# Build flags
+set(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 /Od /Zi /Wall")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-std=c++11 /O2 /fp:fast /arch:SSE2 /Gv /Oi /Ob1 /Zi /Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 /O2 /fp:fast /arch:SSE2 /Gv /Oi /Ob1 /DNDEBUG")
 
-file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
-file(GLOB_RECURSE HEADERS ${SOURCE_DIR}/*.h)
+# Sources
+set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -g -ggdb -O0 -Wall")
+set(SOURCE_FILES
+    src/main.cpp
+)
+set(HEADER_FILES
+    src/datasetgenerator.h
+)
 
-include_directories(${CMAKE_SOURCE_DIR}/Neural)
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+source_group(TREE ${SOURCE_DIR} PREFIX "Source Files" FILES ${SOURCE_FILES})
+source_group(TREE ${SOURCE_DIR} PREFIX "Header Files" FILES ${HEADER_FILES})
 
-target_link_libraries(${PROJECT_NAME} Neural)
+add_subdirectory(../neural ${CMAKE_BINARY_DIR}/neural)
 
-target_include_directories(Test PRIVATE SOURCE_DIR)
+# Link
+target_link_libraries(${PROJECT_NAME}
+    NeuralLib
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR})

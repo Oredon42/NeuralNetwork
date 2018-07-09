@@ -1,54 +1,47 @@
 #ifndef DATASETGENERATOR_H
 #define DATASETGENERATOR_H
 
-#include "src/defines.h"
+#include "neural/dataset.h"
+
 #include <chrono>
 #include <random>
 
 namespace DatasetGenerator
 {
-    Dataset generateRandomDataset(const std::size_t &datasetSize, const real &rInputLowerBound, const real &rInputUpperBound, Outputs (*outputFunction)(Inputs))
+    Dataset generateRandomDataset(const size_t &datasetSize, const double &rInputLowerBound, const double &rInputUpperBound, std::vector<double>(*outputFunction)(const std::vector<double> &))
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-            std::vector<Inputs> aInputs(datasetSize);
-            std::vector<Outputs> aOutputs(datasetSize);
+			std::vector<std::vector<double>> aInputs(datasetSize);
+			std::vector<std::vector<double>> aOutputs(datasetSize);
 
-            real rDelta = 0.0;
-            real rLowerBound = rInputLowerBound;
-            real rUpperBound = rInputUpperBound;
+            std::uniform_real_distribution<double> unif(rInputLowerBound, rInputUpperBound);
+            const unsigned int &uiSeed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::default_random_engine re(uiSeed);
 
-            if(rInputLowerBound < 0)
+            for(size_t i = 0; i < datasetSize; ++i)
             {
-                rDelta = rInputLowerBound;
-                rUpperBound = rInputUpperBound - rInputLowerBound;
-                rLowerBound = 0.0;
+				aInputs[i].resize(2);
+                aInputs[i][0] = unif(re);
+				aInputs[i][1] = unif(re);
+				aOutputs[i].resize(1);
+                aOutputs[i][0] = outputFunction(aInputs[i])[0];
             }
-
-            std::uniform_real_distribution<real> unif(rLowerBound, rUpperBound);
-            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-            std::default_random_engine re(seed);
-
-            for(std::size_t i = 0; i < datasetSize; ++i)
-            {
-                aInputs[i].push_back(unif(re) + rDelta);
-                aOutputs[i] = outputFunction(aInputs[i]);
-            }
-            return {aInputs, aOutputs};
+            return Dataset(aInputs, aOutputs);
         }
-        return {std::vector<Inputs>(), std::vector<Outputs>()};
+        return Dataset();
     }
 
-    Dataset generateSampledDataset(const std::size_t &datasetSize, const real &rInputLowerBound, const real &rInputUpperBound, Outputs (*outputFunction)(Inputs))
+    Dataset generateSampledDataset(const size_t &datasetSize, const double &rInputLowerBound, const double &rInputUpperBound, std::vector<double>(*outputFunction)(const std::vector<double> &))
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-            std::vector<Inputs> aInputs(datasetSize);
-            std::vector<Outputs> aOutputs(datasetSize);
+			std::vector<std::vector<double>> aInputs(datasetSize);
+			std::vector<std::vector<double>> aOutputs(datasetSize);
 
-            real rDelta = 0.0;
-            real rLowerBound = rInputLowerBound;
-            real rUpperBound = rInputUpperBound;
+            double rDelta = 0.0;
+			double rLowerBound = rInputLowerBound;
+			double rUpperBound = rInputUpperBound;
 
             if(rInputLowerBound < 0)
             {
@@ -57,18 +50,19 @@ namespace DatasetGenerator
                 rLowerBound = 0.0;
             }
 
-            real rStep = (rUpperBound - rLowerBound) / static_cast<real>(datasetSize);
+			double rStep = (rUpperBound - rLowerBound) / static_cast<double>(datasetSize);
 
-            real rInputValue = rLowerBound;
-            for(real i = 0; i < datasetSize; ++i)
+			double rInputValue = rLowerBound;
+            for(size_t i = 0; i < datasetSize; ++i)
             {
-                aInputs[i].push_back(rInputValue + rDelta);
+				aInputs[i].resize(2);
+				aInputs[i][0] = rInputValue + rDelta;
                 aOutputs[i] = outputFunction(aInputs[i]);
                 rInputValue += rStep;
             }
-            return {aInputs, aOutputs};
+            return Dataset(aInputs, aOutputs);
         }
-        return {std::vector<Inputs>(), std::vector<Outputs>()};
+        return Dataset();
     }
 };
 
