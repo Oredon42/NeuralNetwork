@@ -1,12 +1,20 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#ifdef _MSC_VER
+    #define INLINE __forceinline
+#elif __GCC__ or __clang__
+    #define INLINE inline
+#else
+    #define INLINE
+#endif
+
 #include <vector>
 
 #ifdef _SIMPLE_PRECISION
-	using real = float;
+    using real = float;
 #else
-	using real = double;
+    using real = double;
 #endif
 
 using Input = real;

@@ -7,19 +7,19 @@
 #include <chrono>
 
 Perceptron::Perceptron(const size_t &uiInputsSize, const PerceptronParameters &parameters) :
-	m_aWeights(uiInputsSize),
-	m_rLearningRate(parameters.rLearningRate),
-	m_rBias(parameters.rBias),
-	m_rMomentum(parameters.rMomentum),
-	m_arSavedDerivatives(uiInputsSize)
+    m_aWeights(uiInputsSize),
+    m_rLearningRate(parameters.rLearningRate),
+    m_rBias(parameters.rBias),
+    m_rMomentum(parameters.rMomentum),
+    m_arSavedDerivatives(uiInputsSize)
 {
-	m_pfActivationFunction = activationFunctionFromType(parameters.eActivationFunctionType);
-	m_pfActivationDerivative = activationDerivativeFromType(parameters.eActivationFunctionType);
+    m_pfActivationFunction = activationFunctionFromType(parameters.eActivationFunctionType);
+    m_pfActivationDerivative = activationDerivativeFromType(parameters.eActivationFunctionType);
 }
 
 Output Perceptron::evaluate(const Inputs &aInputs) const
 {
-	return m_pfActivationFunction(evaluationFunction(aInputs));
+    return m_pfActivationFunction(evaluationFunction(aInputs));
 }
 
 /*
@@ -30,31 +30,31 @@ Output Perceptron::evaluate(const Inputs &aInputs) const
  */
 Errors Perceptron::train(const Inputs &aInputs, const Output &rTargetOutput)
 {
-	ASSERT(aInputs.size() == numberOfInputs());
+    ASSERT(aInputs.size() == numberOfInputs());
 
-	// Evaluate
-	const real &rZ = evaluationFunction(aInputs);
-	const Output &rActualOutput = m_pfActivationFunction(rZ);
+    // Evaluate
+    const real &rZ = evaluationFunction(aInputs);
+    const Output &rActualOutput = m_pfActivationFunction(rZ);
 
-	// Compute Error
-	const Error rError = m_pfActivationDerivative(rZ) * (rTargetOutput - rActualOutput);
-	Errors aOutputErrors(numberOfInputs());
+    // Compute Error
+    const Error rError = m_pfActivationDerivative(rZ) * (rTargetOutput - rActualOutput);
+    Errors aOutputErrors(numberOfInputs());
 
-	for(size_t i = 0; i < numberOfInputs(); ++i)
-	{
-		const real rDerivative = rError * aInputs[i];
+    for(size_t i = 0; i < numberOfInputs(); ++i)
+    {
+        const real rDerivative = rError * aInputs[i];
 
-		// Compute error to send to previous layers (backpropagation)
-		aOutputErrors[i] = rDerivative * m_aWeights[i];
+        // Compute error to send to previous layers (backpropagation)
+        aOutputErrors[i] = rDerivative * m_aWeights[i];
 
-		// Update weights
-		m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
+        // Update weights
+        m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
 
-		// Save derivative
-		m_arSavedDerivatives[i] = rDerivative;
-	}
+        // Save derivative
+        m_arSavedDerivatives[i] = rDerivative;
+    }
 
-	return aOutputErrors;
+    return aOutputErrors;
 }
 
 /*
@@ -66,37 +66,37 @@ Errors Perceptron::train(const Inputs &aInputs, const Output &rTargetOutput)
  */
 Errors Perceptron::train(const Inputs &aInputs, const std::vector<Errors> &aNextLayerErrors, const size_t &nodeIndex)
 {
-	ASSERT(aInputs.size() == numberOfInputs());
+    ASSERT(aInputs.size() == numberOfInputs());
 
-	// Evaluate
-	const real &rZ = evaluationFunction(aInputs);
+    // Evaluate
+    const real &rZ = evaluationFunction(aInputs);
 
-	// Compute sum of next Layer errors
-	real rWeightedNextLayerErrorSum = 0.0;
-	for(size_t i = 0; i < aNextLayerErrors.size(); ++i)
-	{
-		rWeightedNextLayerErrorSum += aNextLayerErrors[i][nodeIndex];
-	}
-	
-	// Compute Error
-	const Error rError = m_pfActivationDerivative(rZ) * rWeightedNextLayerErrorSum;
-	Errors aOutputErrors(numberOfInputs());
+    // Compute sum of next Layer errors
+    real rWeightedNextLayerErrorSum = 0.0;
+    for(size_t i = 0; i < aNextLayerErrors.size(); ++i)
+    {
+        rWeightedNextLayerErrorSum += aNextLayerErrors[i][nodeIndex];
+    }
+    
+    // Compute Error
+    const Error rError = m_pfActivationDerivative(rZ) * rWeightedNextLayerErrorSum;
+    Errors aOutputErrors(numberOfInputs());
 
-	for(size_t i = 0; i < numberOfInputs(); ++i)
-	{
-		const real rDerivative = rError * aInputs[i];
+    for(size_t i = 0; i < numberOfInputs(); ++i)
+    {
+        const real rDerivative = rError * aInputs[i];
 
-		// Compute error to send to previous layers (backpropagation)
-		aOutputErrors[i] = rDerivative * m_aWeights[i];
+        // Compute error to send to previous layers (backpropagation)
+        aOutputErrors[i] = rDerivative * m_aWeights[i];
 
-		// Update weights
-		m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
+        // Update weights
+        m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
 
-		// Save derivative
-		m_arSavedDerivatives[i] = rDerivative;
-	}
+        // Save derivative
+        m_arSavedDerivatives[i] = rDerivative;
+    }
 
-	return aOutputErrors;
+    return aOutputErrors;
 }
 
 void Perceptron::initializeRandomWeights()
@@ -105,7 +105,7 @@ void Perceptron::initializeRandomWeights()
     const unsigned int &uiSeed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine re(uiSeed);
 
-	const real epsilon = 2.4494897427831780981972840747059 / sqrt(static_cast<real>(numberOfInputs() + 1.0));
+    const real epsilon = 2.4494897427831780981972840747059 / sqrt(static_cast<real>(numberOfInputs() + 1.0));
 
     for(size_t i = 0; i < numberOfInputs(); ++i)
     {
@@ -115,23 +115,23 @@ void Perceptron::initializeRandomWeights()
 
 void Perceptron::setActivationFunction(const ActivationFunctionType &eActivationFunctionType)
 {
-	m_pfActivationFunction = activationFunctionFromType(eActivationFunctionType);
-	m_pfActivationDerivative = activationDerivativeFromType(eActivationFunctionType);
+    m_pfActivationFunction = activationFunctionFromType(eActivationFunctionType);
+    m_pfActivationDerivative = activationDerivativeFromType(eActivationFunctionType);
 }
 
 void Perceptron::setInputsSize(const size_t &uiInputsSize)
 {
-	m_aWeights.resize(uiInputsSize);
-	m_arSavedDerivatives.resize(uiInputsSize);
+    m_aWeights.resize(uiInputsSize);
+    m_arSavedDerivatives.resize(uiInputsSize);
 }
 void Perceptron::setLearningRate(const real &rLearningRate)
 {
-	m_rLearningRate = rLearningRate;
+    m_rLearningRate = rLearningRate;
 }
 
 void Perceptron::setBias(const real &rBias)
 {
-	m_rBias = rBias;
+    m_rBias = rBias;
 }
 
 /*
@@ -139,14 +139,14 @@ void Perceptron::setBias(const real &rBias)
  */
 real Perceptron::evaluationFunction(const Inputs &aInputs) const
 {
-	ASSERT(aInputs.size() == numberOfInputs());
+    ASSERT(aInputs.size() == numberOfInputs());
 
-	real rZ = m_rBias;
+    real rZ = m_rBias;
 
-	for(size_t i = 0; i < numberOfInputs(); ++i)
-	{
-		rZ += m_aWeights[i] * aInputs[i];
-	}
+    for(size_t i = 0; i < numberOfInputs(); ++i)
+    {
+        rZ += m_aWeights[i] * aInputs[i];
+    }
 
-	return rZ;
+    return rZ;
 }

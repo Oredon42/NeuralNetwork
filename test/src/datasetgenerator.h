@@ -12,8 +12,8 @@ namespace DatasetGenerator
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-			std::vector<std::vector<double>> aInputs(datasetSize);
-			std::vector<std::vector<double>> aOutputs(datasetSize);
+            std::vector<std::vector<double>> aInputs(datasetSize);
+            std::vector<std::vector<double>> aOutputs(datasetSize);
 
             std::uniform_real_distribution<double> unif(rInputLowerBound, rInputUpperBound);
             const unsigned int &uiSeed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -21,10 +21,10 @@ namespace DatasetGenerator
 
             for(size_t i = 0; i < datasetSize; ++i)
             {
-				aInputs[i].resize(2);
+                aInputs[i].resize(2);
                 aInputs[i][0] = unif(re);
-				aInputs[i][1] = unif(re);
-				aOutputs[i].resize(1);
+                aInputs[i][1] = unif(re);
+                aOutputs[i].resize(1);
                 aOutputs[i][0] = outputFunction(aInputs[i])[0];
             }
             return Dataset(aInputs, aOutputs);
@@ -36,12 +36,12 @@ namespace DatasetGenerator
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-			std::vector<std::vector<double>> aInputs(datasetSize);
-			std::vector<std::vector<double>> aOutputs(datasetSize);
+            std::vector<std::vector<double>> aInputs(datasetSize);
+            std::vector<std::vector<double>> aOutputs(datasetSize);
 
             double rDelta = 0.0;
-			double rLowerBound = rInputLowerBound;
-			double rUpperBound = rInputUpperBound;
+            double rLowerBound = rInputLowerBound;
+            double rUpperBound = rInputUpperBound;
 
             if(rInputLowerBound < 0)
             {
@@ -50,13 +50,13 @@ namespace DatasetGenerator
                 rLowerBound = 0.0;
             }
 
-			double rStep = (rUpperBound - rLowerBound) / static_cast<double>(datasetSize);
+            double rStep = (rUpperBound - rLowerBound) / static_cast<double>(datasetSize);
 
-			double rInputValue = rLowerBound;
+            double rInputValue = rLowerBound;
             for(size_t i = 0; i < datasetSize; ++i)
             {
-				aInputs[i].resize(2);
-				aInputs[i][0] = rInputValue + rDelta;
+                aInputs[i].resize(2);
+                aInputs[i][0] = rInputValue + rDelta;
                 aOutputs[i] = outputFunction(aInputs[i]);
                 rInputValue += rStep;
             }
