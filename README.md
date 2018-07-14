@@ -1,7 +1,7 @@
 # NeuralNetwork
 
 ## Description
-This project is the implementation of a basic C++ Neural Network library. The goal of this library is a way for me to understand how Neural Networks work, and explore the differents learning algorithms. The implementation uses the Multilayer Perceptron model.
+This project an implementation of a basic C++ Neural Network library. The goal of this library is a way for me to understand how Neural Networks work, and explore the differents learning algorithms. The implementation uses the Multilayer Perceptron model.
 
 ## Features
  * Multilayer Perceptron
