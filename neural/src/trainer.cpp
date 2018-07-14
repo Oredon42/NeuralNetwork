@@ -6,7 +6,9 @@
 #include <iostream>
 
 Trainer::Trainer(const TrainingParameters &parameters, const bool &bVerbose) :
-    m_rMaxError(parameters.rMaxError),
+    m_iMaxIterations(parameters.iMaxIterations),
+    m_rErrorThreshold(parameters.rErrorThreshold),
+    m_rTrainingRateThreshold(parameters.rTrainingRateThreshold),
     m_rCrossValidationEvaluationPercent(parameters.rCrossValidationEvaluationPercent),
     m_bVerbose(bVerbose)
 {
@@ -48,14 +50,15 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
         std::cout << "Start training" << std::endl
             << "Training size: " << crossValidationIndex << std::endl
             << "Evaluation size: " << (dataset.size() - crossValidationIndex) << std::endl
-            << "Goal Error: " << m_rMaxError << std::endl
-            << "Current Error: " << rError << std::endl << std::endl;
+            << "[Error] current" << rError << " goal: " << m_rErrorThreshold << std::endl
+            << "[Training rate] current: " << 0.0 << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
     }
 
-    real rPreviousError = m_rMaxError;
+    real rPreviousError = rError;
+    real rTrainingRate = rError;
     unsigned long iterationsIndex = 0;
     bool bEnd = false;
-    while(rError > m_rMaxError && iterationsIndex <= s_maxIterations && bEnd != true)
+    while(iterationsIndex <= m_iMaxIterations && rError > m_rErrorThreshold && rTrainingRate > m_rTrainingRateThreshold && bEnd != true)
     {
         // Train Neural Network
         for(size_t i = 0; i < crossValidationIndex; ++i)
@@ -81,15 +84,10 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
         if(m_bVerbose == true)
         {
             std::cout << "Iteration " << iterationsIndex << std::endl
-                << "Goal Error: " << m_rMaxError << std::endl
-                << "Current Error: " << rError << std::endl << std::endl;
+                << "[Error] current" << rError << " goal: " << m_rErrorThreshold << std::endl
+                << "[Training rate] current: " << rTrainingRate << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
         }
-
-        if(rError > rPreviousError)
-        {
-            bEnd = true;
-        }
-
+        rTrainingRate = rPreviousError - rError;
         rPreviousError = rError;
 
         ++iterationsIndex;
@@ -98,8 +96,8 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
     if(m_bVerbose == true)
     {
         std::cout << "End training" << std::endl
-            << "Goal Error: " << m_rMaxError << std::endl
-            << "Final Error: " << rError << std::endl << std::endl;
+            << "[Error] final" << rError << " goal: " << m_rErrorThreshold << std::endl
+            << "[Training rate] final: " << rTrainingRate << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
     }
 
     // TODO denormalize Dataset?

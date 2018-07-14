@@ -10,7 +10,7 @@
 std::vector<double> regressionFunction(const std::vector<double> &inputs)
 {
     std::vector<double> out(1);
-    out[0] = inputs[0] * inputs[1];
+    out[0] = 2 * inputs[0] + inputs[1];
     return out;
 }
 
@@ -32,11 +32,11 @@ int main(int argc, char *argv[])
     }
 
     // Init Multilayer Perceptron
-    Perceptron::PerceptronParameters perceptronParameters = { HyperbolicTangent, 0.1, 0.0 };
+    Perceptron::PerceptronParameters perceptronParameters = { HyperbolicTangent, 0.1, 0.0, 0.01 };
     MultilayerPerceptron::MultilayerPerceptronParameters multilayerPerceptronParameters;
     multilayerPerceptronParameters.numberOfInputs = 2;
-    multilayerPerceptronParameters.aLayerParameters.push_back({ 10, perceptronParameters });
-    multilayerPerceptronParameters.aLayerParameters.push_back({ 10, perceptronParameters });
+    multilayerPerceptronParameters.aLayerParameters.push_back({ 5, perceptronParameters });
+    multilayerPerceptronParameters.aLayerParameters.push_back({ 5, perceptronParameters });
     multilayerPerceptronParameters.aLayerParameters.push_back({ 1, perceptronParameters });
     MultilayerPerceptron multilayerPerceptron(multilayerPerceptronParameters);
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
     // Init Trainer
     Trainer::TrainingParameters trainingParameters;
-    trainingParameters.rMaxError = 0.0001;
+    trainingParameters.rErrorThreshold = 0.000001;
     trainingParameters.rCrossValidationEvaluationPercent = 0.7;
     Trainer trainer(trainingParameters, true);
 

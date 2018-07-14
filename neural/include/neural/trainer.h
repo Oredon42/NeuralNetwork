@@ -8,14 +8,13 @@ class Dataset;
 
 class Trainer
 {
-private:
-    static constexpr unsigned long s_maxIterations = 10000;
-
 public:
     struct TrainingParameters
     {
-        real rMaxError;
-        real rCrossValidationEvaluationPercent;
+        int iMaxIterations = -1;
+        real rErrorThreshold = -1.0;
+        real rTrainingRateThreshold = -1.0;
+        real rCrossValidationEvaluationPercent = 1.0;
     };
 
 public:
@@ -24,7 +23,9 @@ public:
     void train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset) const;
 
 private:
-    real m_rMaxError;
+    int m_iMaxIterations;
+    real m_rErrorThreshold;
+    real m_rTrainingRateThreshold;
     real m_rCrossValidationEvaluationPercent;
 
     bool m_bVerbose;

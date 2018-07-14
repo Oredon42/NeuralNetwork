@@ -37,7 +37,7 @@ Errors Perceptron::train(const Inputs &aInputs, const Output &rTargetOutput)
     const Output &rActualOutput = m_pfActivationFunction(rZ);
 
     // Compute Error
-    const Error rError = m_pfActivationDerivative(rZ) * (rTargetOutput - rActualOutput);
+    const Error rError = m_pfActivationDerivative(rZ) * (rActualOutput - rTargetOutput);
     Errors aOutputErrors(numberOfInputs());
 
     for(size_t i = 0; i < numberOfInputs(); ++i)
@@ -45,10 +45,10 @@ Errors Perceptron::train(const Inputs &aInputs, const Output &rTargetOutput)
         const real rDerivative = rError * aInputs[i];
 
         // Compute error to send to previous layers (backpropagation)
-        aOutputErrors[i] = rDerivative * m_aWeights[i];
+        aOutputErrors[i] = rError * m_aWeights[i];
 
         // Update weights
-        m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
+        m_aWeights[i] -= rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
 
         // Save derivative
         m_arSavedDerivatives[i] = rDerivative;
@@ -87,10 +87,10 @@ Errors Perceptron::train(const Inputs &aInputs, const std::vector<Errors> &aNext
         const real rDerivative = rError * aInputs[i];
 
         // Compute error to send to previous layers (backpropagation)
-        aOutputErrors[i] = rDerivative * m_aWeights[i];
+        aOutputErrors[i] = rError * m_aWeights[i];
 
         // Update weights
-        m_aWeights[i] += rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
+        m_aWeights[i] -= rDerivative * m_rLearningRate + m_arSavedDerivatives[i] * m_rMomentum;
 
         // Save derivative
         m_arSavedDerivatives[i] = rDerivative;
