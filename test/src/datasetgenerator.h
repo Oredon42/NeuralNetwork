@@ -6,42 +6,54 @@
 #include <chrono>
 #include <random>
 
+using GenerationFunctionPtr = void(*)(const LayerInputs &, LayerOutputs &);
+
 namespace DatasetGenerator
 {
-    Dataset generateRandomDataset(const size_t &datasetSize, const double &rInputLowerBound, const double &rInputUpperBound, std::vector<double>(*outputFunction)(const std::vector<double> &))
+    Dataset generateRandomDataset(const size_t &datasetSize, const real &rInputLowerBound, const real &rInputUpperBound, const MultilayerPerceptronParameters &networkParameters, GenerationFunctionPtr generationFunctionPtr)
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-            std::vector<std::vector<double>> aInputs(datasetSize);
-            std::vector<std::vector<double>> aOutputs(datasetSize);
+            size_t numberOfInputs = networkParameters.numberOfInputs;
+            size_t numberOfOutputs = networkParameters.aLayerParameters.back().layerSize;
 
-            std::uniform_real_distribution<double> unif(rInputLowerBound, rInputUpperBound);
-            const unsigned int &uiSeed = std::chrono::system_clock::now().time_since_epoch().count();
-            std::default_random_engine re(uiSeed);
+            std::vector<std::vector<real>> aInputs(datasetSize);
+            std::vector<std::vector<real>> aOutputs(datasetSize);
+
+            std::uniform_real_distribution<real> unif(rInputLowerBound, rInputUpperBound);
+            std::default_random_engine re(e_uiSeed++);
 
             for(size_t i = 0; i < datasetSize; ++i)
             {
-                aInputs[i].resize(2);
-                aInputs[i][0] = unif(re);
-                aInputs[i][1] = unif(re);
-                aOutputs[i].resize(1);
-                aOutputs[i][0] = outputFunction(aInputs[i])[0];
+                aInputs[i].resize(numberOfInputs);
+                for(int j = 0; j < numberOfInputs; ++j)
+                {
+                    aInputs[i][j] = unif(re);
+                }
+                aOutputs[i].resize(numberOfOutputs);
+                for(int j = 0; j < numberOfOutputs; ++j)
+                {
+                    generationFunctionPtr(aInputs[i], aOutputs[i]);
+                }
             }
             return Dataset(aInputs, aOutputs);
         }
         return Dataset();
     }
 
-    Dataset generateSampledDataset(const size_t &datasetSize, const double &rInputLowerBound, const double &rInputUpperBound, std::vector<double>(*outputFunction)(const std::vector<double> &))
+    Dataset generateSampledDataset(const size_t &datasetSize, const real &rInputLowerBound, const real &rInputUpperBound, const MultilayerPerceptronParameters &networkParameters, GenerationFunctionPtr generationFunctionPtr)
     {
         if(datasetSize > 0 && rInputLowerBound < rInputUpperBound)
         {
-            std::vector<std::vector<double>> aInputs(datasetSize);
-            std::vector<std::vector<double>> aOutputs(datasetSize);
+            size_t numberOfInputs = networkParameters.numberOfInputs;
+            size_t numberOfOutputs = networkParameters.aLayerParameters.back().layerSize;
 
-            double rDelta = 0.0;
-            double rLowerBound = rInputLowerBound;
-            double rUpperBound = rInputUpperBound;
+            std::vector<std::vector<real>> aInputs(datasetSize);
+            std::vector<std::vector<real>> aOutputs(datasetSize);
+
+            real rDelta = 0.0;
+            real rLowerBound = rInputLowerBound;
+            real rUpperBound = rInputUpperBound;
 
             if(rInputLowerBound < 0)
             {
@@ -50,15 +62,22 @@ namespace DatasetGenerator
                 rLowerBound = 0.0;
             }
 
-            double rStep = (rUpperBound - rLowerBound) / static_cast<double>(datasetSize);
+            real rStep = (rUpperBound - rLowerBound) / static_cast<real>(datasetSize);
 
-            double rInputValue = rLowerBound;
+            real rInputValue = rLowerBound;
             for(size_t i = 0; i < datasetSize; ++i)
             {
-                aInputs[i].resize(2);
-                aInputs[i][0] = rInputValue + rDelta;
-                aOutputs[i] = outputFunction(aInputs[i]);
-                rInputValue += rStep;
+                aInputs[i].resize(numberOfInputs);
+                for(int j = 0; j < numberOfInputs; ++j)
+                {
+                    aInputs[i][j] = rInputValue + rDelta;
+                    rInputValue += rStep;
+                }
+                aOutputs[i].resize(numberOfOutputs);
+                for(int j = 0; j < numberOfOutputs; ++j)
+                {
+                    generationFunctionPtr(aInputs[i], aOutputs[i]);
+                }
             }
             return Dataset(aInputs, aOutputs);
         }

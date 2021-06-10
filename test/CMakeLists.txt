@@ -5,6 +5,8 @@ project(Test)
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Build flags
 if(MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 /Od /Zi /Wall")

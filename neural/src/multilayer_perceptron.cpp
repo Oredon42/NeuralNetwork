@@ -7,6 +7,8 @@ MultilayerPerceptron::MultilayerPerceptron(const MultilayerPerceptronParameters 
     ASSERT(parameters.aLayerParameters.size() > 0 && parameters.numberOfInputs > 0);
 
     m_aLayers.reserve(parameters.aLayerParameters.size());
+    m_aOutputs.resize(parameters.aLayerParameters.size());
+    m_aErrors.resize(parameters.aLayerParameters.size());
 
     m_numberOfInputs = parameters.numberOfInputs;
     size_t previousLayerSize = m_numberOfInputs;
@@ -15,28 +17,39 @@ MultilayerPerceptron::MultilayerPerceptron(const MultilayerPerceptronParameters 
     {
         m_aLayers.push_back(Layer(previousLayerSize, parameters.aLayerParameters[i]));
         previousLayerSize = m_aLayers[i].size();
+        m_aOutputs[i].resize(parameters.aLayerParameters[i].layerSize);
+        m_aErrors[i].resize(parameters.aLayerParameters[i].layerSize);
+        for(size_t j = 0; j < parameters.aLayerParameters[i].layerSize; ++j)
+        {
+            if(i > 0)
+            {
+                m_aErrors[i][j].resize(parameters.aLayerParameters[i - 1].layerSize);
+            }
+            else
+            {
+                m_aErrors[i][j].resize(parameters.numberOfInputs);
+            }
+        }
     }
 }
 
-Outputs MultilayerPerceptron::evaluate(const Inputs &aInputs) const
+const LayerOutputs &MultilayerPerceptron::evaluate(const LayerInputs &aInputs)
 {
     ASSERT(aInputs.size() == m_numberOfInputs);
-    
-    std::vector<Outputs> aEvaluationData(m_aLayers.size());
 
     // Inputs layer
-    aEvaluationData[0] = m_aLayers[0].evaluate(aInputs);
+    m_aLayers[0].evaluate(aInputs, m_aOutputs[0]);
 
     // Hidden layers + Output layer
     for(size_t i = 1; i < m_aLayers.size(); ++i)
     {
-        aEvaluationData[i] = m_aLayers[i].evaluate(aEvaluationData[i - 1]);
+        m_aLayers[i].evaluate(m_aOutputs[i - 1], m_aOutputs[i]);
     }
 
-    return aEvaluationData.back();
+    return m_aOutputs.back();
 }
 
-void MultilayerPerceptron::train(const Inputs &aInputs, const Outputs &aTargetOuputs)
+void MultilayerPerceptron::train(const LayerInputs &aInputs, const LayerOutputs &aTargetOuputs)
 {
     ASSERT(aInputs.size() == m_numberOfInputs && aTargetOuputs.size() == m_aLayers.back().size());
 
@@ -44,35 +57,31 @@ void MultilayerPerceptron::train(const Inputs &aInputs, const Outputs &aTargetOu
      * Forward propagation
      */
 
-    std::vector<Outputs> aEvaluationData(m_aLayers.size());
-
     // Inputs layer
-    aEvaluationData[0] = m_aLayers[0].evaluate(aInputs);
+    m_aLayers[0].evaluate(aInputs, m_aOutputs[0]);
 
     // Hidden layers + Output layer
     for(size_t i = 1; i < m_aLayers.size(); ++i)
     {
-        aEvaluationData[i] = m_aLayers[i].evaluate(aEvaluationData[i - 1]);
+        m_aLayers[i].evaluate(m_aOutputs[i - 1], m_aOutputs[i]);
     }
 
     /*
      * Back propagation
      */
 
-    std::vector<std::vector<Errors>> aErrorsData(m_aLayers.size());
-
     // Outputs layer
     size_t i = m_aLayers.size() - 1;
-    aErrorsData[i] = m_aLayers.back().train(aEvaluationData[aEvaluationData.size() - 2], aTargetOuputs);
+    m_aLayers.back().train(m_aOutputs[m_aOutputs.size() - 2], aTargetOuputs, m_aErrors[i]);
 
     // Hidden layers
     for(size_t i = m_aLayers.size() - 2; i > 0; --i)
     {
-        aErrorsData[i] = m_aLayers[i].train(aEvaluationData[i - 1], aErrorsData[i + 1]);
+        m_aLayers[i].train(m_aOutputs[i - 1], m_aErrors[i + 1], m_aErrors[i]);
     }
 
     // Inputs layer
-    m_aLayers.front().train(aInputs, aErrorsData[1]);
+    m_aLayers.front().train(aInputs, m_aErrors[1], m_aErrors[0]);
 }
 
 Layer MultilayerPerceptron::layer(const size_t &i) const

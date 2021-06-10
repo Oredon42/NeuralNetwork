@@ -8,46 +8,56 @@ Dataset::Dataset()
 {
 }
 
-Dataset::Dataset(const std::vector<Inputs> &aInputs, const std::vector<Outputs> &aOutputs, const DatasetParameters &parameters)
+Dataset::Dataset(const std::vector<LayerInputs> &aInputs, const std::vector<LayerOutputs> &aOutputs, const DatasetParameters &parameters)
 {
     ASSERT(aInputs.size() == aOutputs.size());
 
     m_aInputs = aInputs;
     m_aOutputs = aOutputs;
 
-    if(parameters.inputsMin.size() > 0)
+    if(parameters.filled() == true)
     {
         m_inputsMin = parameters.inputsMin;
         m_inputsMax = parameters.inputsMax;
         m_outputsMin = parameters.outputsMin;
         m_outputsMax = parameters.outputsMax;
+
+        m_inputsMean = parameters.inputsMean;
+        m_inputsStandardDeviation = parameters.inputsStandardDeviation;
+        m_outputsMean = parameters.outputsMean;
+        m_outputsStandardDeviation = parameters.outputsStandardDeviation;
     }
     else
     {
-        computeMinMax();
+        computeStatistics();
     }
 }
 
-void Dataset::normalize(const real &rInputsMin, const real &rInputsMax, const real &rOutputsMin, const real &rOutputsMax)
+void Dataset::normalise()
 {
     ASSERT(size() > 0);
 
-    const size_t &inputSize = m_aInputs[0].size();
-    const size_t &outputSize = m_aOutputs[0].size();
+    real rInputsMin = 0.0;
+    real rInputsMax = 1.0;
+    real rOutputsMin = 0.0;
+    real rOutputsMax = 1.0;
+
+    const size_t inputSize = m_aInputs[0].size();
+    const size_t outputSize = m_aOutputs[0].size();
 
     // Precompute normalization data
-    Outputs aDenormalizedInputsDiff(inputSize);
+    LayerOutputs aDenormalizedInputsDiff(inputSize);
     const real aNormalizedInputsDiff = rInputsMax - rInputsMin;
-    Outputs aDenormalizedOutputsDiff(inputSize);
+    LayerOutputs aDenormalizedOutputsDiff(outputSize);
     const real aNormalizedOutputsDiff = rOutputsMax - rOutputsMin;
 
-    for(size_t j = 0; j < inputSize; ++j)
+    for(size_t i = 0; i < inputSize; ++i)
     {
-        aDenormalizedInputsDiff[j] = 1.0 / (m_inputsMax[j] - m_inputsMin[j]);
+        aDenormalizedInputsDiff[i] = 1.0 / (m_inputsMax[i] - m_inputsMin[i]);
     }
-    for(size_t j = 0; j < outputSize; ++j)
+    for(size_t i = 0; i < outputSize; ++i)
     {
-        aDenormalizedOutputsDiff[j] = 1.0 / (m_outputsMax[j] - m_outputsMin[j]);
+        aDenormalizedOutputsDiff[i] = 1.0 / (m_outputsMax[i] - m_outputsMin[i]);
     }
 
     // Normalize
@@ -64,9 +74,27 @@ void Dataset::normalize(const real &rInputsMin, const real &rInputsMax, const re
     }
 }
 
-void Dataset::addData(const Inputs &aInputs, const Outputs &aOutputs)
+void Dataset::standardise()
 {
-    ASSERT(m_aInputs.size() == 0 || (m_aInputs.size() == m_aInputs[0].size() && m_aOutputs[0].size() == aOutputs.size()));
+    const size_t inputSize = m_aInputs[0].size();
+    const size_t outputSize = m_aOutputs[0].size();
+
+    for(size_t i = 0; i < size(); ++i)
+    {
+        for(size_t j = 0; j < inputSize; ++j)
+        {
+            m_aInputs[i][j] = (m_aInputs[i][j] - m_inputsMean[j]) / m_inputsStandardDeviation[j];
+        }
+        for(size_t j = 0; j < outputSize; ++j)
+        {
+            m_aOutputs[i][j] = (m_aOutputs[i][j] - m_outputsMean[j]) / m_outputsStandardDeviation[j];
+        }
+    }
+}
+
+void Dataset::addData(const LayerInputs &aInputs, const LayerOutputs &aOutputs)
+{
+    ASSERT(m_aInputs.size() == 0 || (m_aInputs[0].size() == aInputs.size() && m_aOutputs[0].size() == aOutputs.size()));
 
     m_aInputs.push_back(aInputs);
     m_aOutputs.push_back(aOutputs);
@@ -112,7 +140,7 @@ void Dataset::loadFile(const std::string &strDatasetPath)
             bool bLoadingFinished = true;
             while(bLoadingFinished == true)
             {
-                Inputs inputs(inputsSize);
+                LayerInputs inputs(inputsSize);
                 for(size_t i = 0; i < inputsSize; ++i)
                 {
                     real rValue;
@@ -125,7 +153,7 @@ void Dataset::loadFile(const std::string &strDatasetPath)
                 }
                 m_aInputs.push_back(inputs);
 
-                Outputs outputs(outputsSize);
+                LayerOutputs outputs(outputsSize);
                 for(size_t i = 0; i < outputsSize; ++i)
                 {
                     real rValue;
@@ -142,7 +170,7 @@ void Dataset::loadFile(const std::string &strDatasetPath)
         loadFile.close();
     }
 
-    computeMinMax();
+    computeStatistics();
 }
 
 void Dataset::writeFile(const std::string &strDatasetPath) const
@@ -181,7 +209,7 @@ void Dataset::writeFile(const std::string &strDatasetPath) const
     }
 }
 
-void Dataset::computeMinMax()
+void Dataset::computeStatistics()
 {
     m_inputsMin = m_aInputs[0];
     m_inputsMax = m_inputsMin;
@@ -190,6 +218,11 @@ void Dataset::computeMinMax()
 
     const size_t inputSize = m_aInputs[0].size();
     const size_t outputSize = m_aOutputs[0].size();
+
+    m_inputsMean = m_aInputs[0];
+    m_outputsMean = m_aOutputs[0];
+    m_inputsStandardDeviation = LayerInputs(inputSize, 0.0);
+    m_outputsStandardDeviation = LayerInputs(outputSize, 0.0);
 
     // Get min and max of all Inputs/Outputs
     for(size_t i = 1; i < size(); ++i)
@@ -205,7 +238,10 @@ void Dataset::computeMinMax()
             {
                 m_inputsMax[j] = m_aInputs[i][j];
             }
+
+            m_inputsMean[j] += m_aInputs[i][j];
         }
+
         // Outputs
         for(size_t j = 0; j < outputSize; ++j)
         {
@@ -217,6 +253,43 @@ void Dataset::computeMinMax()
             {
                 m_outputsMax[j] = m_aOutputs[i][j];
             }
+
+            m_outputsMean[j] += m_aOutputs[i][j];
         }
+    }
+
+    for(size_t j = 0; j < inputSize; ++j)
+    {
+        m_inputsMean[j] /= size();
+    }
+
+    for(size_t j = 0; j < outputSize; ++j)
+    {
+        m_outputsMean[j] /= size();
+    }
+
+    for(size_t i = 0; i < size(); ++i)
+    {
+        for(size_t j = 0; j < inputSize; ++j)
+        {
+            real rDeviation = m_aInputs[i][j] - m_inputsMean[j];
+            m_inputsStandardDeviation[j] += rDeviation * rDeviation;
+        }
+
+        for(size_t j = 0; j < outputSize; ++j)
+        {
+            real rDeviation = m_aOutputs[i][j] - m_outputsMean[j];
+            m_outputsStandardDeviation[j] += rDeviation * rDeviation;
+        }
+    }
+
+    for(size_t j = 0; j < inputSize; ++j)
+    {
+        m_inputsStandardDeviation[j] = sqrt(m_inputsStandardDeviation[j] / size());
+    }
+
+    for(size_t j = 0; j < outputSize; ++j)
+    {
+        m_outputsStandardDeviation[j] = sqrt(m_outputsStandardDeviation[j] / size());
     }
 }

@@ -10,23 +10,22 @@ Trainer::Trainer(const TrainingParameters &parameters, const bool &bVerbose) :
     m_rErrorThreshold(parameters.rErrorThreshold),
     m_rTrainingRateThreshold(parameters.rTrainingRateThreshold),
     m_rCrossValidationEvaluationPercent(parameters.rCrossValidationEvaluationPercent),
+    m_eScalingMethod(parameters.eScalingMethod),
     m_bVerbose(bVerbose)
 {
-
+    
 }
 
-void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset) const
+void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset)
 {
-    // Check activation bounds
-    ActivationBounds pfBounds = activationBoundsFromType(multilayerPerceptron.layer(0).activationFunctionType());
-    real inputsMin, inputsMax, outputsMin, outputsMax;
-    const bool &bBounds = pfBounds(inputsMin, inputsMax, outputsMin, outputsMax);
-
-    if(bBounds == true)
+    if(m_eScalingMethod == ScalingMethod::Normalisation)
     {
-        dataset.normalize(inputsMin, inputsMax, outputsMin, outputsMax);
+        dataset.normalise();
     }
-
+    else if(m_eScalingMethod == ScalingMethod::Standardisation)
+    {
+        dataset.standardise();
+    }
     const real rDatasetSize = static_cast<real>(dataset.size());
     const size_t crossValidationIndex = static_cast<size_t>(rDatasetSize * m_rCrossValidationEvaluationPercent);
     
@@ -34,7 +33,7 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
     real rError = 0.0;
     for(size_t i = crossValidationIndex; i < dataset.size(); ++i)
     {
-        const Outputs &actualOutputs = multilayerPerceptron.evaluate(dataset.inputs(i));
+        const LayerOutputs &actualOutputs = multilayerPerceptron.evaluate(dataset.inputs(i));
 
         // Add euclidian distance between target and actual Output to Error
         for(size_t j = 0; j < actualOutputs.size(); ++j)
@@ -50,7 +49,7 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
         std::cout << "Start training" << std::endl
             << "Training size: " << crossValidationIndex << std::endl
             << "Evaluation size: " << (dataset.size() - crossValidationIndex) << std::endl
-            << "[Error] current" << rError << " goal: " << m_rErrorThreshold << std::endl
+            << "[Error] current: " << rError << " goal: " << m_rErrorThreshold << std::endl
             << "[Training rate] current: " << 0.0 << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
     }
 
@@ -70,7 +69,7 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
         rError = 0.0;
         for(size_t i = crossValidationIndex; i < dataset.size(); ++i)
         {
-            const Outputs &actualOutputs = multilayerPerceptron.evaluate(dataset.inputs(i));
+            const LayerOutputs &actualOutputs = multilayerPerceptron.evaluate(dataset.inputs(i));
 
             // Add euclidian distance between target and actual Output to Error
             for(size_t j = 0; j < actualOutputs.size(); ++j)
@@ -81,10 +80,10 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
         }
         rError /= rDatasetSize;
 
-        if(m_bVerbose == true)
+        if(m_bVerbose == true && (iterationsIndex % 100) == 0)
         {
             std::cout << "Iteration " << iterationsIndex << std::endl
-                << "[Error] current" << rError << " goal: " << m_rErrorThreshold << std::endl
+                << "[Error] current: " << rError << " goal: " << m_rErrorThreshold << std::endl
                 << "[Training rate] current: " << rTrainingRate << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
         }
         rTrainingRate = rPreviousError - rError;
@@ -95,8 +94,8 @@ void Trainer::train(MultilayerPerceptron &multilayerPerceptron, Dataset &dataset
 
     if(m_bVerbose == true)
     {
-        std::cout << "End training" << std::endl
-            << "[Error] final" << rError << " goal: " << m_rErrorThreshold << std::endl
+        std::cout << "End training " << iterationsIndex << " iterations" << std::endl
+            << "[Error] final: " << rError << " goal: " << m_rErrorThreshold << std::endl
             << "[Training rate] final: " << rTrainingRate << " goal " << m_rTrainingRateThreshold << std::endl << std::endl;
     }
 

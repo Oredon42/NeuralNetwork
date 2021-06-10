@@ -1,5 +1,6 @@
 set(SOURCE_FILES
     src/dataset.cpp
+	src/defines.cpp
     src/layer.cpp
     src/multilayer_perceptron.cpp
     src/perceptron.cpp

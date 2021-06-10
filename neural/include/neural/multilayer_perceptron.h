@@ -3,26 +3,26 @@
 
 #include "neural/layer.h"
 
+struct MultilayerPerceptronParameters
+{
+    size_t numberOfInputs;
+    std::vector<LayerParameters> aLayerParameters;
+};
+
 class MultilayerPerceptron
 {
 public:
-    struct MultilayerPerceptronParameters
-    {
-        size_t numberOfInputs;
-        std::vector<Layer::LayerParameters> aLayerParameters;
-    };
-
-public:
     MultilayerPerceptron(const MultilayerPerceptronParameters &parameters);
 
-    Outputs evaluate(const Inputs &aInputs) const;
-    void train(const Inputs &aInputs, const Outputs &aTargetOuputs);
+    const LayerOutputs &evaluate(const LayerInputs &aInputs);
+    void train(const LayerInputs &aInputs, const LayerOutputs &aTargetOuputs);
 
     Layer layer(const size_t &i) const;
 
 private:
     std::vector<Layer> m_aLayers;
-
+    std::vector<LayerInputs> m_aOutputs;
+    std::vector<LayerErrors> m_aErrors;
     size_t m_numberOfInputs;
 };
 

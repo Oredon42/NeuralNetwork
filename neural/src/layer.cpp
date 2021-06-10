@@ -17,40 +17,28 @@ Layer::Layer(const size_t &previousLayerSize, const LayerParameters &parameters)
     }
 }
 
-Outputs Layer::evaluate(const Inputs &aInputs) const
+void Layer::evaluate(const LayerInputs &aInputs, LayerOutputs &aOutputs) const
 {
     ASSERT(aInputs.size() == m_aPerceptrons[0].numberOfInputs());
 
-    Outputs aOutputs(size());
-
     for(size_t i = 0; i < size(); ++i)
     {
-        aOutputs[i] = m_aPerceptrons[i].evaluate(aInputs);
+        m_aPerceptrons[i].evaluate(aInputs, aOutputs[i]);
     }
-
-    return aOutputs;
 }
 
-std::vector<Errors> Layer::train(const Inputs &aInputs, const Outputs &aTargetOutputs)
+void Layer::train(const LayerInputs &aInputs, const LayerOutputs &aTargetOutputs, LayerErrors &aErrors)
 {
-    std::vector<Errors> aErrors(size());
-
     for(size_t i = 0; i < size(); ++i)
     {
-        aErrors[i] = m_aPerceptrons[i].train(aInputs, aTargetOutputs[i]);
+        m_aPerceptrons[i].train(aInputs, aTargetOutputs[i], aErrors[i]);
     }
-
-    return aErrors;
 }
 
-std::vector<Errors> Layer::train(const Inputs &aInputs, const std::vector<Errors> &aNextLayerErrors)
+void Layer::train(const LayerInputs &aInputs, const LayerErrors &aNextLayerErrors, LayerErrors &aErrors)
 {
-    std::vector<Errors> aErrors(size());
-
     for(size_t i = 0; i < size(); ++i)
     {
-        aErrors[i] = m_aPerceptrons[i].train(aInputs, aNextLayerErrors, i);
+        m_aPerceptrons[i].train(aInputs, aNextLayerErrors, i, aErrors[i]);
     }
-
-    return aErrors;
 }

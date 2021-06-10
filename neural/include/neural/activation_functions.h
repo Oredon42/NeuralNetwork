@@ -5,112 +5,94 @@
 
 #include <math.h>
 
-enum ActivationFunctionType
+enum class ActivationFunctionType
 {
+    Linear,
     HyperbolicTangent,
     RectifiedLinearUnits
 };
 
 // Rename for simplicity
-using ActivationFunction = real (*)(const real &);
-using ActivationDerivative = real(*)(const real &);
-using ActivationBounds = bool(*)(real &, real &, real &, real &);
+using ActivationFunctionPtr = real (*)(real);
+using ActivationDerivativePtr = real(*)(real);
 
 // Getters
-INLINE ActivationFunction activationFunctionFromType(const ActivationFunctionType &type);
-INLINE ActivationDerivative activationDerivativeFromType(const ActivationFunctionType &type);
-INLINE ActivationBounds activationBoundsFromType(const ActivationFunctionType &type);
+INLINE ActivationFunctionPtr activationFunctionFromType(ActivationFunctionType type);
+INLINE ActivationDerivativePtr activationDerivativeFromType(ActivationFunctionType type);
 
 // Functions declarations
-INLINE real hyperbolicTangent(const real &rValue);
-INLINE real rectifiedLinearUnits(const real &rValue);
+INLINE real linear(real rValue);
+INLINE real hyperbolicTangent(real rValue);
+INLINE real rectifiedLinearUnits(real rValue);
 
 // Derivatives declarations
-INLINE real dHyperbolicTangent(const real &rValue);
-INLINE real dRectifiedLinearUnits(const real &rValue);
-
-// Inputs/Outputs bounds declarations
-INLINE bool hyperbolicTangentBounds(real &rInputsMin, real &rInputsMax, real &rOutputsMin, real &rOutputsMax);
-INLINE bool rectifiedLinearUnitsBounds(real &rInputsMin, real &rInputsMax, real &rOutputsMin, real &rOutputsMax);
+INLINE real dLinear(real rValue);
+INLINE real dHyperbolicTangent(real rValue);
+INLINE real dRectifiedLinearUnits(real rValue);
 
 // Getters
 
-ActivationFunction activationFunctionFromType(const ActivationFunctionType &type)
+ActivationFunctionPtr activationFunctionFromType(ActivationFunctionType type)
 {
     switch(type)
     {
-    case HyperbolicTangent:
+    case ActivationFunctionType::Linear:
+        return &linear;
+    case ActivationFunctionType::HyperbolicTangent:
         return &hyperbolicTangent;
-    case RectifiedLinearUnits:
+    case ActivationFunctionType::RectifiedLinearUnits:
         return &rectifiedLinearUnits;
     default:
         return nullptr;
     }
 }
 
-ActivationDerivative activationDerivativeFromType(const ActivationFunctionType &type)
+ActivationDerivativePtr activationDerivativeFromType(ActivationFunctionType type)
 {
     switch (type)
     {
-    case HyperbolicTangent:
+    case ActivationFunctionType::Linear:
+        return &dLinear;
+    case ActivationFunctionType::HyperbolicTangent:
         return &dHyperbolicTangent;
-    case RectifiedLinearUnits:
+    case ActivationFunctionType::RectifiedLinearUnits:
         return &dRectifiedLinearUnits;
     default:
         return nullptr;
     }
 }
 
-ActivationBounds activationBoundsFromType(const ActivationFunctionType &type)
+// Functions definitions
+real linear(real rValue)
 {
-    switch (type)
-    {
-    case HyperbolicTangent:
-        return &hyperbolicTangentBounds;
-    case RectifiedLinearUnits:
-        return &rectifiedLinearUnitsBounds;
-    default:
-        return nullptr;
-    }
+    return rValue;
 }
 
-
-// Functions definitions
-real hyperbolicTangent(const real &rValue)
+real hyperbolicTangent(real rValue)
 {
     return tanh(rValue);
 }
 
-real rectifiedLinearUnits(const real &rValue)
+real rectifiedLinearUnits(real rValue)
 {
     return fmax(rValue, 0.0);
 }
 
 // Derivatives definitions
-real dHyperbolicTangent(const real &rValue)
+real dLinear(real rValue)
 {
-    const real &tmp = tanh(rValue);
+    return 1.0;
+}
+
+real dHyperbolicTangent(real rValue)
+{
+    real tmp = tanh(rValue);
     return 1.0 - (tmp * tmp);
 }
 
-real dRectifiedLinearUnits(const real &rValue)
+real dRectifiedLinearUnits(real rValue)
 {
     return rValue > 0.0 ? 1.0 : 0.0;
-}
-
-// Inputs/Outputs bounds declarations
-bool hyperbolicTangentBounds(real &rInputsMin, real &rInputsMax, real &rOutputsMin, real &rOutputsMax)
-{
-    rInputsMin = -5.0;
-    rInputsMax = 5.0;
-    rOutputsMin = -1.0;
-    rOutputsMax = 1.0;
-    return true;
-}
-
-bool rectifiedLinearUnitsBounds(real &rInputsMin, real &rInputsMax, real &rOutputsMin, real &rOutputsMax)
-{
-    return false; // No bounds for ReLu
 }
 
 #endif // ACTIVATION_FUNCTIONS_H

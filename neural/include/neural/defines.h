@@ -17,14 +17,18 @@
     using real = double;
 #endif
 
-using Input = real;
-using Output = real;
-using Weight = real;
-using Error = real;
+using PerceptronInput = real;
+using PerceptronOutput = real;
+using PerceptronWeight = real;
+using PerceptronError = real;
 
-using Inputs = std::vector<Input>;
-using Outputs = std::vector<Output>;
-using Weights = std::vector<Weight>;
-using Errors = std::vector<Error>;
+using PerceptronErrors = std::vector<real>;
+
+using LayerInputs = std::vector<PerceptronInput>;
+using LayerOutputs = std::vector<PerceptronOutput>;
+using LayerWeights = std::vector<PerceptronWeight>;
+using LayerErrors = std::vector<PerceptronErrors>;
+
+extern unsigned int e_uiSeed;
 
 #endif // DEFINES_H

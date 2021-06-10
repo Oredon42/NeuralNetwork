@@ -4,32 +4,31 @@
 #include "neural/defines.h"
 #include "neural/activation_functions.h"
 
+struct PerceptronParameters
+{
+    ActivationFunctionType eActivationFunctionType;
+    real rLearningRate;
+    real rBias;
+    real rMomentum;
+};
+
 class Perceptron
 {
 public:
-    struct PerceptronParameters
-    {
-        ActivationFunctionType eActivationFunctionType;
-        real rLearningRate;
-        real rBias;
-        real rMomentum;
-    };
-
-public:
     Perceptron(const size_t &uiInputsSize, const PerceptronParameters &parameters);
 
-    Output evaluate(const Inputs &aInputs) const;
+    void evaluate(const LayerInputs &aInputs, PerceptronOutput &output) const;
 
-    Errors train(const Inputs &aInputs, const Output &rTargetOutput);
-    Errors train(const Inputs &aInputs, const std::vector<Errors> &aNextLayerErrors, const size_t &nodeIndex);
+    void train(const LayerInputs &aInputs, PerceptronOutput rTargetOutput, PerceptronErrors &aErrors);
+    void train(const LayerInputs &aInputs, const LayerErrors &aNextLayerErrors, size_t nodeIndex, PerceptronErrors &aErrors);
 
     void initializeRandomWeights();
 
     // Setters
-    void setActivationFunction(const ActivationFunctionType &eActivationFunctionType);
-    void setInputsSize(const size_t &uiInputsSize);
-    void setLearningRate(const real &rLearningRate);
-    void setBias(const real &rBias);
+    void setActivationFunction(ActivationFunctionType eActivationFunctionType);
+    void setInputsSize(size_t uiInputsSize);
+    void setLearningRate(real rLearningRate);
+    void setBias(real rBias);
 
     // Getters
     INLINE size_t numberOfInputs() const{return m_aWeights.size();}
@@ -37,10 +36,10 @@ public:
     INLINE real bias() const{return m_rBias;}
 
 private:
-    ActivationFunction m_pfActivationFunction = nullptr;
-    ActivationDerivative m_pfActivationDerivative = nullptr;
+    ActivationFunctionPtr m_pfActivationFunctionPtr = nullptr;
+    ActivationDerivativePtr m_pfActivationDerivativePtr = nullptr;
 
-    Weights m_aWeights;
+    LayerWeights m_aWeights;
 
     real m_rLearningRate = 0.1;
     real m_rBias = 0.0;
@@ -50,7 +49,7 @@ private:
 
 private:
     // Private methods
-    real evaluationFunction(const Inputs &aInputs) const;
+    real evaluationFunction(const LayerInputs &aInputs) const;
 };
 
 #endif // PERCEPTRON_H
